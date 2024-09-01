@@ -1,0 +1,79 @@
+﻿@page "/search-reservations"
+@using Core.Models
+@using Services
+@inject PatientReservationService PatientReservationService
+@inject NavigationManager NavigationManager
+
+<div class="container my-5">
+    <div class="card shadow-sm border-0 rounded-4 bg-white">
+        <div class="card-body p-5" style="background-color: #f9fafb;">
+            <h3 class="text-center text-primary mb-4">🛏️ <span class="fw-bold">Search Reservations</span></h3>
+
+            <EditForm Model="searchModel" OnValidSubmit="HandleSearch">
+                <div class="mb-3">
+                    <label class="form-label">Start Date</label>
+                    <InputDate @bind-Value="searchModel.InDate" class="form-control rounded-pill border-primary" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">End Date</label>
+                    <InputDate @bind-Value="searchModel.CheckoutDate" class="form-control rounded-pill border-primary" />
+                </div>
+
+                <div class="d-flex justify-content-center">
+                    <button type="submit" class="btn btn-info btn-lg rounded-3">
+                        <i class="fas fa-search me-2"></i> Search
+                    </button>
+                </div>
+            </EditForm>
+
+            @if (reservations != null)
+            {
+                <div class="table-responsive mt-4">
+                    <table class="table table-hover align-middle">
+                        <thead style="background-color: #007bff; color: white;">
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Room ID</th>
+                                <th>In Date</th>
+                                <th>Checkout Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (reservations.Any())
+                            {
+                                @foreach (var reservation in reservations)
+                                {
+                                    <tr>
+                                        <td>@reservation.PatientId</td>
+                                        <td>@reservation.RoomId</td>
+                                        <td>@reservation.InDate?.ToShortDateString()</td>
+                                        <td>@reservation.CheckoutDate?.ToShortDateString()</td>
+                                        <td>@reservation.Status</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">No reservations found for the specified date range.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private PatientReservation searchModel = new();
+    private List<PatientReservation> reservations = new();
+
+    private async Task HandleSearch()
+    {
+        reservations = (await PatientReservationService.SearchPatientReservationsAsync(searchModel.InDate, searchModel.CheckoutDate)).ToList();
+    }
+}

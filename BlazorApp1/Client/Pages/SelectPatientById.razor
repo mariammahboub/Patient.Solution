@@ -1,0 +1,38 @@
+﻿@page "/select-patient-by-id"
+@using Core.Models
+@using Services
+
+<h3>Select Patient by ID</h3>
+
+<EditForm Model="patientId" OnValidSubmit="GetPatientById">
+    <div class="form-group">
+        <label>Patient ID</label>
+        <InputNumber @bind-Value="patientId" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Select</button>
+</EditForm>
+
+@if (patient != null)
+{
+    <div>
+        <h4>Patient Details</h4>
+        <p>MRN: @patient.MRN</p>
+        <p>Full Name: @patient.FullName</p>
+        <p>Mother Name: @patient.MotherName</p>
+        <p>Transfer From: @patient.TransferFrom</p>
+        <p>Birth Date: @patient.BirthDate.ToShortDateString()</p>
+    </div>
+}
+
+@code {
+    private int patientId;
+    private Patient patient;
+
+    [Inject]
+    private PatientService PatientService { get; set; }
+
+    private async Task GetPatientById()
+    {
+        patient = await PatientService.GetPatientByIdAsync(patientId);
+    }
+}

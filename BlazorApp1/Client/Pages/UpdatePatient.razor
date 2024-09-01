@@ -1,0 +1,103 @@
+﻿@page "/update-patient-therapy/{Id:int}"
+@using Core.Models
+@using Services
+@inject PatientTherapyService PatientTherapyService
+@inject PatientService PatientService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="container my-5">
+    <div class="card shadow-sm border-0 rounded-4 bg-white">
+        <div class="card-body p-5" style="background-color: #f9fafb;">
+            <h3 class="text-center text-primary mb-4">🧑‍⚕️ <span class="fw-bold">Update Patient Therapy</span></h3>
+
+            <EditForm Model="updatedPatientTherapy" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger mb-3" />
+
+                <!-- Display error message if present -->
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @errorMessage
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label class="form-label">Patient</label>
+                    <InputSelect @bind-Value="updatedPatientTherapy.PatientId" class="form-control rounded-pill border-primary">
+                        <option value="">Select a patient</option>
+                        @foreach (var patient in patients)
+                        {
+                            <option value="@patient.Id">@patient.FullName</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Number of Sessions</label>
+                    <InputNumber @bind-Value="updatedPatientTherapy.NumberOfSessions" class="form-control rounded-pill border-primary" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Completed Sessions</label>
+                    <InputNumber @bind-Value="updatedPatientTherapy.CompletedSessions" class="form-control rounded-pill border-primary" />
+                </div>
+
+                <div class="d-flex justify-content-center">
+                    <button type="submit" class="btn btn-primary btn-lg rounded-3">
+                        <i class="fas fa-check me-2"></i> Update Therapy
+                    </button>
+                    <button type="button" class="btn btn-secondary ms-2" @onclick="NavigateToPatientTherapies">Cancel</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private PatientTherapy updatedPatientTherapy = new PatientTherapy();
+    private string errorMessage;
+    private List<Patient> patients = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Load the patient therapies and patients
+            updatedPatientTherapy = await PatientTherapyService.GetPatientThreapyByIdAsync(Id);
+            patients = await PatientService.GetPatientsAsync();
+
+            // Check if therapy data is loaded correctly
+            if (updatedPatientTherapy == null)
+            {
+                NavigationManager.NavigateTo("/patient-therapies");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            await PatientTherapyService.UpdatePatientTherapiesAsync(updatedPatientTherapy);
+            NavigationManager.NavigateTo("/patient-therapies");
+        }
+        catch (Exception ex)
+        {
+            // Handle errors here
+            errorMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    private void NavigateToPatientTherapies()
+    {
+        NavigationManager.NavigateTo("/patient-therapies");
+    }
+}

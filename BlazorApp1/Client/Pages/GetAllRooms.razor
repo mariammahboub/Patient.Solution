@@ -1,0 +1,111 @@
+﻿@page "/room-management"
+@using Core.Models
+@using Services
+@inject RoomService RoomService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="container my-5">
+    <div class="card shadow-sm border-0 rounded-4 bg-white">
+        <div class="card-body p-5" style="background-color: #f9fafb;">
+            <h3 class="text-center text-primary mb-4">🛏️ <span class="fw-bold">Room Management</span></h3>
+
+            <div class="d-flex justify-content-center mb-4">
+                <button class="btn btn-success btn-lg rounded-pill px-5" @onclick="NavigateToCreate">
+                    <i class="fas fa-plus me-2"></i> Add New Room
+                </button>
+            </div>
+
+            <EditForm Model="searchModel" OnValidSubmit="SearchRooms">
+                <div class="input-group mb-4 rounded-pill shadow-sm">
+                    <span class="input-group-text bg-white border-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <InputText @bind-Value="searchModel.RoomNumber" class="form-control border-0 rounded-end-pill" placeholder="Search by Room Number" />
+                    <button class="btn btn-info rounded-pill px-4" type="submit">Search</button>
+                </div>
+            </EditForm>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead style="background-color: #007bff; color: white;">
+                        <tr>
+                            <th>Room Number</th>
+                            <th>Room Floor</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (rooms.Any())
+                        {
+                            @foreach (var room in rooms)
+                            {
+                                <tr>
+                                    <td>@room.RoomNumber</td>
+                                    <td>@room.RoomFloor</td>
+                                    <td class="text-center">
+                                        <a class="btn btn-outline-primary btn-sm me-2 rounded-pill px-3" href="update-room/@room.Id">
+                                            <i class="fas fa-edit me-1"></i> Update
+                                        </a>
+                                        <button class="btn btn-outline-danger btn-sm rounded-pill px-3" @onclick="() => ConfirmDelete(room.Id)">
+                                            <i class="fas fa-trash-alt me-1"></i> Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">No rooms found. Try searching with a different number.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Room> rooms = new();
+    private Room searchModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        rooms = (await RoomService.GetRoomsAsync()).ToList();
+    }
+
+    private async Task SearchRooms()
+    {
+        rooms = (await RoomService.SearchRoomsAsync(searchModel.RoomNumber)).ToList();
+    }
+
+    private void NavigateToCreate()
+    {
+        NavigationManager.NavigateTo("/create-room");
+    }
+
+    private async Task ConfirmDelete(int roomId)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this room?");
+        if (confirmed)
+        {
+            await DeleteRoom(roomId);
+        }
+    }
+
+    private async Task DeleteRoom(int roomId)
+    {
+        try
+        {
+            await RoomService.DeleteRoomAsync(roomId);
+            rooms = (await RoomService.GetRoomsAsync()).ToList(); // Refresh the list
+        }
+        catch (Exception ex)
+        {
+            // Handle or log the error
+            Console.WriteLine($"Error deleting room: {ex.Message}");
+        }
+    }
+}

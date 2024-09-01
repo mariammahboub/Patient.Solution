@@ -1,0 +1,62 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<div class="container my-5">
+    <div class="card shadow-lg border-0 rounded-4 bg-light p-4">
+        <div class="card-body p-5 text-center">
+            <!-- Greeting -->
+            <h1 class="text-center text-primary mb-4">
+                <span class="me-2">👋</span>
+                <span class="fw-bold">Welcome to Our Hospital!</span>
+            </h1>
+            <p class="text-muted mb-4 fs-5">
+                Your one-stop solution for managing room reservations and tracking therapy sessions.
+            </p>
+
+            <!-- Main Action Buttons -->
+            <div class="d-flex justify-content-center mb-4">
+                <a href="/patient-reservations" class="btn btn-primary btn-lg rounded-pill me-3 shadow-sm">
+                    <i class="fas fa-bed me-2"></i> <span class="fw-bold">Book a Room</span>
+                </a>
+                <a href="/patient-therapies" class="btn btn-success btn-lg rounded-pill shadow-sm">
+                    <i class="fas fa-hands-helping me-2"></i> <span class="fw-bold">Therapy Sessions</span>
+                </a>
+            </div>
+
+   
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        background: #fdfdfd;
+        border: 2px solid #d1d1d1;
+    }
+
+    .btn-primary, .btn-success {
+        font-weight: bold;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+
+    .btn-outline-primary {
+        color: #007bff;
+        border-color: #007bff;
+    }
+
+        .btn-outline-primary:hover {
+            background-color: #007bff;
+            color: white;
+        }
+</style>
+

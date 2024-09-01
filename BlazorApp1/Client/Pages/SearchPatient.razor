@@ -1,0 +1,58 @@
+﻿@page "/search-patient"
+@using Core.Models
+@using Services
+
+<h3>Search Patient</h3>
+
+<EditForm Model="searchModel" OnValidSubmit="SearchPatients">
+    <div class="form-group">
+        <label>Search by Name</label>
+        <InputText @bind-Value="searchModel.FullName" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Search</button>
+</EditForm>
+
+@if (patients != null && patients.Any())
+{
+    <h4>Search Results</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>MRN</th>
+                <th>Full Name</th>
+                <th>Mother Name</th>
+                <th>Transfer From</th>
+                <th>Birth Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var patient in patients)
+            {
+                <tr>
+                    <td>@patient.MRN</td>
+                    <td>@patient.FullName</td>
+                    <td>@patient.MotherName</td>
+                    <td>@patient.TransferFrom</td>
+                    <td>@patient.BirthDate.ToShortDateString()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else if (patients != null)
+{
+    <p>No patients found.</p>
+}
+
+@code {
+    private Patient searchModel = new();
+    private List<Patient> patients;
+
+    [Inject]
+    private PatientService PatientService { get; set; }
+
+    private async Task SearchPatients()
+    {
+        patients = (await PatientService.SearchPatientsAsync(searchModel.FullName)).ToList();
+    }
+}

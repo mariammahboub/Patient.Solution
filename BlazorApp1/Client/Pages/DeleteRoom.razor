@@ -1,0 +1,48 @@
+﻿@page "/delete-room/{RoomId:int}"
+@using Services
+@using Core.Models
+@inject RoomService RoomService
+@inject NavigationManager NavigationManager
+
+<h3>Delete Room</h3>
+
+@if (isDeleting)
+{
+    <p>Deleting...</p>
+}
+else if (deleteSuccess)
+{
+    <p>Room deleted successfully. <a href="/room-management">Go back to Room Management</a></p>
+}
+else if (deleteError)
+{
+    <p>Error deleting room. <a href="/room-management">Go back to Room Management</a></p>
+}
+
+@code {
+    [Parameter]
+    public int RoomId { get; set; }
+
+    private bool isDeleting = false;
+    private bool deleteSuccess = false;
+    private bool deleteError = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isDeleting = true;
+
+        try
+        {
+            await RoomService.DeleteRoomAsync(RoomId);
+            deleteSuccess = true;
+        }
+        catch
+        {
+            deleteError = true;
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+}

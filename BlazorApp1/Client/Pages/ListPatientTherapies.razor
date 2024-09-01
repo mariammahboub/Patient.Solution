@@ -1,0 +1,101 @@
+﻿@page "/patient-therapies"
+@using Core.Models
+@using Services
+@inject PatientTherapyService PatientTherapyService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="container my-5">
+    <div class="card shadow-sm border-0 rounded-4 bg-white">
+        <div class="card-body p-5">
+            <h3 class="text-center text-primary mb-4">🧑‍⚕️ <span class="fw-bold">Patient Therapies</span></h3>
+
+            <!-- Add a button to navigate to the create page -->
+            <div class="mb-4 text-end">
+                <a href="/create-patient-therapy" class="btn btn-primary btn-lg rounded-3">
+                    <i class="fas fa-plus me-2"></i> Add New Therapy
+                </a>
+            </div>
+
+            <!-- Display therapies in a table -->
+            @if (patientTherapies.Any())
+            {
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Number of Sessions</th>
+                            <th>Completed Sessions</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var therapy in patientTherapies)
+                        {
+                            <tr>
+                                <td>@therapy.NumberOfSessions</td>
+                                <td>@therapy.CompletedSessions</td>
+                                <td>
+                                    @if (therapy.IsNearClose == true)
+                                    {
+                                        <span class="badge bg-warning">Near Completion</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Ongoing</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a href="/update-patient-therapy/@therapy.Id" class="btn btn-info btn-sm rounded-3">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <button class="btn btn-danger btn-sm rounded-3 ms-2" @onclick="() => DeleteTherapy(therapy.Id)">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-center">No patient therapies found.</p>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<PatientTherapy> patientTherapies = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            patientTherapies = await PatientTherapyService.GetPatientTherapiesAsync();
+        }
+        catch (Exception ex)
+        {
+            // Handle errors (e.g., logging or displaying a message)
+            Console.WriteLine($"Error loading data: {ex.Message}");
+        }
+    }
+
+    private async Task DeleteTherapy(int id)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this therapy?"))
+        {
+            try
+            {
+                await PatientTherapyService.DeletePatientTherapiesAsync(id);
+                patientTherapies = await PatientTherapyService.GetPatientTherapiesAsync();
+            }
+            catch (Exception ex)
+            {
+                // Handle errors (e.g., logging or displaying a message)
+                Console.WriteLine($"Error deleting therapy: {ex.Message}");
+            }
+        }
+    }
+}

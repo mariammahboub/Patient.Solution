@@ -1,0 +1,73 @@
+﻿@page "/create-room"
+@using Core.Models
+@using Services
+@inject RoomService RoomService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="container my-5">
+    <div class="card shadow-sm border-0 rounded-4 bg-white">
+        <div class="card-body p-5" style="background-color: #f9fafb;">
+            <h3 class="text-center text-primary mb-4">🛏️ <span class="fw-bold">Create New Room</span></h3>
+
+            <EditForm Model="newRoom" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger mb-3" />
+
+                <!-- Display error message if present -->
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @errorMessage
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label class="form-label">Room Number</label>
+                    <InputText @bind-Value="newRoom.RoomNumber" class="form-control rounded-pill border-primary" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Room Floor</label>
+                    <InputText @bind-Value="newRoom.RoomFloor" class="form-control rounded-pill border-primary" />
+                </div>
+
+                <div class="d-flex justify-content-center">
+                    <button type="submit" class="btn btn-primary btn-lg rounded-3" style="background-color: #4a90e2; border-color: #4a90e2;">
+                        <i class="fas fa-check me-2"></i>Add Room
+                    </button>
+                    <button type="button" class="btn btn-secondary ms-2" @onclick="NavigateToRooms">Cancel</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Room newRoom = new Room();
+    private string errorMessage;
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            await RoomService.AddRoomAsync(newRoom);
+            NavigationManager.NavigateTo("/room-management");
+        }
+        catch (HttpRequestException httpEx)
+        {
+            // Show detailed error message in the page
+            errorMessage = $"HTTP Error: {httpEx.Message}\nDetails: {httpEx.StackTrace}";
+        }
+        catch (Exception ex)
+        {
+            // Show detailed error message in the page
+            errorMessage = $"Error: {ex.Message}\nDetails: {ex.StackTrace}";
+        }
+    }
+
+    private void NavigateToRooms()
+    {
+        NavigationManager.NavigateTo("/room-management"); // Redirect to the rooms list page
+    }
+}

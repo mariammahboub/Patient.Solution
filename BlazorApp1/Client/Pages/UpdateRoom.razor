@@ -1,0 +1,83 @@
+﻿@page "/update-room/{id:int}"
+@using Core.Models
+@using Services
+@inject RoomService RoomService
+@inject NavigationManager NavigationManager
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Room room = new Room();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            room = await RoomService.GetRoomByIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            // Handle exceptions, e.g., show an error message
+            Console.Error.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            await RoomService.UpdateRoomAsync(room);
+            NavigationManager.NavigateTo("/room-management"); // Redirect to the rooms list page
+        }
+        catch (Exception ex)
+        {
+            // Handle exceptions, e.g., show an error message
+            Console.Error.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private void NavigateToRooms()
+    {
+        NavigationManager.NavigateTo("/room-management"); // Redirect to the rooms list page
+    }
+}
+
+<div class="container my-5">
+    <div class="card shadow-sm border-0 rounded-4 bg-white">
+        <div class="card-body p-5" style="background-color: #f9fafb;">
+            <h3 class="text-center text-primary mb-4">🛏️ <span class="fw-bold">Update Room</span></h3>
+
+            @if (isLoading)
+            {
+                <p class="text-center">Loading...</p>
+            }
+            else
+            {
+                <EditForm Model="room" OnValidSubmit="HandleValidSubmit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="mb-3">
+                        <label for="roomNumber" class="form-label">Room Number</label>
+                        <InputText id="roomNumber" class="form-control" @bind-Value="room.RoomNumber" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="roomFloor" class="form-label">Room Floor</label>
+                        <InputText id="roomFloor" class="form-control" @bind-Value="room.RoomFloor" />
+                    </div>
+
+                    <div class="d-flex justify-content-center">
+                        <button type="submit" class="btn btn-primary">Update Room</button>
+                        <button type="button" class="btn btn-secondary ms-2" @onclick="NavigateToRooms">Cancel</button>
+                    </div>
+                </EditForm>
+            }
+        </div>
+    </div>
+</div>

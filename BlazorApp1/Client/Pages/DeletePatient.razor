@@ -1,0 +1,47 @@
+﻿@page "/delete-patient/{Id:int}"
+@using Core.Models
+@using Services
+
+<h3>Delete Patient</h3>
+
+<p>Are you sure you want to delete this patient?</p>
+
+@if (patient != null)
+{
+    <div>
+        <p>MRN: @patient.MRN</p>
+        <p>Full Name: @patient.FullName</p>
+    </div>
+
+    <button class="btn btn-danger" @onclick="HandleDeletePatient">Delete</button>
+    <button class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Patient patient;
+
+    [Inject]
+    private PatientService PatientService { get; set; }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        patient = await PatientService.GetPatientByIdAsync(Id);
+    }
+
+    private async Task HandleDeletePatient()
+    {
+        await PatientService.DeletePatientAsync(Id);
+        NavigationManager.NavigateTo("/patient-management");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/patient-management");
+    }
+}

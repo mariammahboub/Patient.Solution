@@ -1,0 +1,122 @@
+﻿@page "/create-reservation"
+@using Core.Models
+@using Services
+@inject PatientReservationService PatientReservationService
+@inject RoomService RoomService
+@inject PatientService PatientService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="container my-5">
+    <div class="card shadow-sm border-0 rounded-4 bg-white">
+        <div class="card-body p-5" style="background-color: #f9fafb;">
+            <h3 class="text-center text-primary mb-4">🛏️ <span class="fw-bold">Create New Reservation</span></h3>
+
+            <EditForm Model="newReservation" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger mb-3" />
+
+                <!-- Display error message if present -->
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @errorMessage
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label class="form-label">Patient</label>
+                    <InputSelect @bind-Value="newReservation.PatientId" class="form-control rounded-pill border-primary">
+                        <option value="">Select a patient</option>
+                        @foreach (var patient in patients)
+                        {
+                            <option value="@patient.Id">@patient.FullName</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Room</label>
+                    <InputSelect @bind-Value="newReservation.RoomId" class="form-control rounded-pill border-primary">
+                        <option value="">Select a room</option>
+                        @foreach (var room in rooms)
+                        {
+                            <option value="@room.Id">@room.RoomNumber</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">In Date</label>
+                    <InputDate @bind-Value="newReservation.InDate" class="form-control rounded-pill border-primary" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Checkout Date</label>
+                    <InputDate @bind-Value="newReservation.CheckoutDate" class="form-control rounded-pill border-primary" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <InputSelect @bind-Value="newReservation.Status" class="form-control rounded-pill border-primary">
+                        <option value="">-- Select Status --</option>
+                        @foreach (var status in Enum.GetValues<ReservationStatus>())
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    </InputSelect>
+
+                </div>
+
+                <div class="d-flex justify-content-center">
+                    <button type="submit" class="btn btn-primary btn-lg rounded-3">
+                        <i class="fas fa-check me-2"></i> Add Reservation
+                    </button>
+                    <button type="button" class="btn btn-secondary ms-2" @onclick="NavigateToReservations">Cancel</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private PatientReservation newReservation = new PatientReservation();
+    private string errorMessage;
+    private List<Patient> patients = new();
+    private List<Room> rooms = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        patients = await PatientService.GetPatientsAsync();
+        rooms = await RoomService.GetRoomsAsync();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        // Ensure all required values are filled
+        if (newReservation.PatientId <= 0 || newReservation.RoomId <= 0 || newReservation.InDate == default || newReservation.CheckoutDate == default)
+        {
+            errorMessage = "Please fill all required fields.";
+            return;
+        }
+
+        try
+        {
+            await PatientReservationService.AddPatientReservationAsync(newReservation);
+            NavigationManager.NavigateTo("/patient-reservations");
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = $"HTTP Error: {httpEx.Message}\nDetails: {httpEx.StackTrace}";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}\nDetails: {ex.StackTrace}";
+        }
+    }
+
+    private void NavigateToReservations()
+    {
+        NavigationManager.NavigateTo("/patient-reservations");
+    }
+}

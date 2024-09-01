@@ -1,0 +1,117 @@
+﻿@page "/patient-reservations"
+@using Core.Models
+@using Services
+@inject PatientReservationService PatientReservationService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="container my-5">
+    <div class="card shadow-sm border-0 rounded-4 bg-white">
+        <div class="card-body p-5" style="background-color: #f9fafb;">
+            <h3 class="text-center text-primary mb-4">🛏️ <span class="fw-bold">Patient Reservations</span></h3>
+
+            <div class="d-flex justify-content-center mb-4">
+                <button class="btn btn-success btn-lg rounded-pill px-5" @onclick="NavigateToCreate">
+                    <i class="fas fa-plus me-2"></i> Add New Reservation
+                </button>
+            </div>
+
+            <EditForm Model="searchModel" OnValidSubmit="SearchReservations">
+                <div class="input-group mb-4 rounded-pill shadow-sm">
+                    <span class="input-group-text bg-white border-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <InputDate @bind-Value="searchModel.InDate" class="form-control border-0 rounded-end-pill" placeholder="Start Date" />
+                    <InputDate @bind-Value="searchModel.CheckoutDate" class="form-control border-0 rounded-end-pill" placeholder="End Date" />
+                    <button class="btn btn-info rounded-pill px-4" type="submit">Search</button>
+                </div>
+            </EditForm>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead style="background-color: #007bff; color: white;">
+                        <tr>
+                            <th>Patient ID</th>
+                            <th>Room ID</th>
+                            <th>In Date</th>
+                            <th>Checkout Date</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (reservations.Any())
+                        {
+                            @foreach (var reservation in reservations)
+                            {
+                                <tr>
+                                    <td>@reservation.PatientId</td>
+                                    <td>@reservation.RoomId</td>
+                                    <td>@reservation.InDate?.ToShortDateString()</td>
+                                    <td>@reservation.CheckoutDate?.ToShortDateString()</td>
+                                    <td>@reservation.Status</td>
+                                    <td class="text-center">
+                                        <a class="btn btn-outline-primary btn-sm me-2 rounded-pill px-3" href="update-reservation/@reservation.Id">
+                                            <i class="fas fa-edit me-1"></i> Update
+                                        </a>
+                                        <a class="btn btn-outline-danger btn-sm rounded-pill px-3" @onclick="() => ConfirmDelete(reservation.Id)">
+                                            <i class="fas fa-trash-alt me-1"></i> Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No reservations found. Try searching with different dates.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<PatientReservation> reservations = new();
+    private PatientReservation searchModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        reservations = (await PatientReservationService.GetPatientReservationsAsync()).ToList();
+    }
+
+    private async Task SearchReservations()
+    {
+        reservations = (await PatientReservationService.SearchPatientReservationsAsync(searchModel.InDate, searchModel.CheckoutDate)).ToList();
+    }
+
+    private void NavigateToCreate()
+    {
+        NavigationManager.NavigateTo("/create-reservation");
+    }
+
+    private async Task ConfirmDelete(int reservationId)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this reservation?");
+        if (confirmed)
+        {
+            await DeleteReservation(reservationId);
+        }
+    }
+
+    private async Task DeleteReservation(int reservationId)
+    {
+        try
+        {
+            await PatientReservationService.DeletePatientReservationAsync(reservationId);
+            reservations = (await PatientReservationService.GetPatientReservationsAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error deleting reservation: {ex.Message}");
+        }
+    }
+}
